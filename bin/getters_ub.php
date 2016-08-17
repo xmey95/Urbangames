@@ -27,5 +27,27 @@ function get_tournament_name_ub($id){
     return $riga['name'];
 }
 
+function get_tournament_players($id){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES torneo{read}");
+    $id=(int)$id;
+    $query=$db->prepare("SELECT players FROM torneo WHERE id = ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db->query("UNLOCK TABLES");
+    $var=$riga['players'];
+    return $var;
+}
+
+function get_tournament_credits($id){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES torneo{read}");
+    $id=(int)$id;
+    $query=$db->prepare("SELECT credits FROM torneo WHERE id= ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db->query("UNLOCK TABLES");
+    return $riga['credits'];
+}
 ?>
 

@@ -49,5 +49,16 @@ function get_tournament_credits($id){
     $db->query("UNLOCK TABLES");
     return $riga['credits'];
 }
+
+function get_group_name($id){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES gironi{read}");
+    $id=(int)$id;
+    $query=$db->prepare("SELECT name FROM gironi WHERE id= ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db->query("UNLOCK TABLES");
+    return $riga['name'];
+}
 ?>
 

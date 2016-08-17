@@ -121,16 +121,108 @@ function mix($array,$players){
 
 //Create final phases matches for 32 players
 function create_final_phase_32($id_tor){
-    
+    $db = connect_urbangames();
+    $db->query("LOCK TABLES iscrizione{read}");
+    $query= $db->prepare("SELECT id_usr FROM iscrizione WHERE id_tor = ?");
+    $query->execute(array($id_tor));
+    $users=$query->fetchAll();
+    $db->query("UNLOCK TABLES");
+    $db->query("LOCK TABLES matches{write}");
+    $users=mix($users, 32);
+    $sedicesimi= create_tab($id_tor);
+    $index=0;
+    $query=$db->prepare("SELECT id FROM matches WHERE id_gir = ?");
+    $query->execute(array($sedicesimi));
+    while($row=$query->fetch()){
+        $query1=$db->prepare("UPDATE matches SET id_usr1 = ?, id_usr2 = ?, state = 0 WHERE id = ?");
+        $query1->execute([$users[$index]['id_usr'], $users[$index+1]['id_usr'], $row['id']]);
+        $index+=2;
+    }
 }
 
 //Create final phases matches for 32 players when tournament has a group phase
 function create_final_phase_p_g($id_tor){
-    
+    $db = connect_urbangames();
+    $primi=array();
+    $secondi=array();
+    $db->query("LOCK TABLES classifica{read}, gironi{read}");
+    $girone=$db->prepare("SELECT id FROM gironi WHERE id_tor = ? AND cat = 0");
+    $girone->execute(array($id_tor));
+    while($riga=$girone->fetch()){
+    $query=$db->prepare("SELECT * FROM classifica WHERE id_gir = ? ORDER BY pnt DESC, gd DESC, gm DESC");
+    $query->execute(array($riga['id']));
+    $primi[]=$query->fetch();
+    $secondi[]=$query->fetch();
+    }
+    $db->query("UNLOCK TABLES");
+    $db->query("LOCK TABLES matches{write}");
+    $sedicesimi= create_tab($id_tor);
+    $primi=mix($primi, 16);
+    $secondi=mix($secondi, 16);
+    $query=$db->prepare("SELECT id FROM matches WHERE id_gir = ?");
+    $query->execute(array($sedicesimi));
+    $index=0;
+    while($row=$query->fetch()){
+        $query1=$db->prepare("UPDATE matches SET id_usr1 = ?, id_usr2 = ?, state = 0 WHERE id = ?");
+        $query1->execute([$primi[$index]['id_usr'], $secondi[$index]['id_usr'], $row['id']]);
+        $index++;
+    }
 }
-
 
 //Create tab for the final phase
 function create_tab($id_tor){
-    
+    $db=  connect_urbangames();
+    $gironi=array();
+    $db->query("LOCK TABLES gironi{write}");
+    $query=$db->prepare("INSERT INTO gironi (id_tor, name, cat) VALUES (?, 'FINALE', 1)");
+    $query->execute(array($id_tor));
+    $gironi[]=$db->lastInsertId();
+    $query=$db->prepare("INSERT INTO gironi (id_tor, name, cat) VALUES (?, 'SEMIFINALE', 1)");
+    $query->execute(array($id_tor));
+    $gironi[]=$db->lastInsertId();
+    $query=$db->prepare("INSERT INTO gironi (id_tor, name, cat) VALUES (?, 'QUARTI DI FINALE', 1)");
+    $query->execute(array($id_tor));
+    $gironi[]=$db->lastInsertId();
+    $query=$db->prepare("INSERT INTO gironi (id_tor, name, cat) VALUES (?, 'OTTAVI DI FINALE', 1)");
+    $query->execute(array($id_tor));
+    $gironi[]=$db->lastInsertId();
+    $query=$db->prepare("INSERT INTO gironi (id_tor, name, cat) VALUES (?, 'SEDICESIMI DI FINALE', 1)");
+    $query->execute(array($id_tor));
+    $gironi[]=$db->lastInsertId();
+    $db->query("LOCK TABLES matches{write}");
+    $query=$db->prepare("INSERT INTO matches (id_gir, next) VALUES (?, 0)");
+    $query->execute(array($gironi[0]));
+    $id_finale=$db->lastInsertId();
+    $db->query("UNLOCK TABLES");
+    $array=  create_prev_matches($gironi[1], $id_finale);
+    $quarti1=  create_prev_matches($gironi[2], $array[0]);
+    $quarti2=  create_prev_matches($gironi[2], $array[1]);
+    $ottavi1=  create_prev_matches($gironi[3], $quarti1[0]);
+    $ottavi2=  create_prev_matches($gironi[3], $quarti1[1]);
+    $ottavi3=  create_prev_matches($gironi[3], $quarti2[0]);
+    $ottavi4=  create_prev_matches($gironi[3], $quarti2[1]);
+    $sed1=  create_prev_matches($gironi[4], $ottavi1[0]);
+    $sed2=  create_prev_matches($gironi[4], $ottavi1[1]);
+    $sed3=  create_prev_matches($gironi[4], $ottavi2[0]);
+    $sed4=  create_prev_matches($gironi[4], $ottavi2[1]);
+    $sed5=  create_prev_matches($gironi[4], $ottavi3[0]);
+    $sed6=  create_prev_matches($gironi[4], $ottavi3[1]);
+    $sed7=  create_prev_matches($gironi[4], $ottavi4[0]);
+    $sed8=  create_prev_matches($gironi[4], $ottavi4[1]);
+    return $gironi[4];
+}
+
+//Create previous matches of the current match
+function create_prev_matches($id_gir, $id_match){
+    $db= connect_urbangames();
+    $db->query("LOCK TABLES matches{write}");
+    $array=array();
+    $query=$db->prepare("INSERT INTO matches (id_gir, next) VALUES (?, ?)");
+    $query->execute(array($id_gir, $id_match));
+    $array[]=$db->lastInsertId();
+    $query=$db->prepare("INSERT INTO matches (id_gir, next) VALUES (?, ?)");
+    $query->execute(array($id_gir, $id_match));
+    $array[]=$db->lastInsertId();
+    $db->query("UNLOCK TABLES");
+    return $array;
 }

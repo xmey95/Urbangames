@@ -57,5 +57,16 @@ function get_id($username){
     $db_users->query("UNLOCK TABLES");
     return $riga['id'];
 }
+
+function get_balance($id){
+    $db_users = connect_users();
+    $db_users->query("LOCK TABLES users{read}");
+    $id=(int)$id;
+    $query=$db_users->prepare("SELECT balance FROM users WHERE id = ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db_users->query("UNLOCK TABLES");
+    return $riga['balance'];
+}
 ?>
 

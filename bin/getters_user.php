@@ -11,6 +11,17 @@ function get_username($id){
     return $riga['username'];
 }
 
+function get_admin($id){
+    $db_users = connect_users();
+    $db_users->query("LOCK TABLES users{read}");
+    $id=(int)$id;
+    $query=$db_users->prepare("SELECT admin FROM users WHERE id = ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db_users->query("UNLOCK TABLES");
+    return $riga['admin'];
+}
+
 function get_telegram($id){
     $db_users = connect_users();
     $db_users->query("LOCK TABLES users{read}");
@@ -20,6 +31,17 @@ function get_telegram($id){
     $riga=$query->fetch();
     $db_users->query("UNLOCK TABLES");
     return $riga['telegram'];
+}
+
+function get_mail($id){
+    $db_users = connect_users();
+    $db_users->query("LOCK TABLES users{read}");
+    $id=(int)$id;
+    $query=$db_users->prepare("SELECT mail FROM users WHERE id = ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db_users->query("UNLOCK TABLES");
+    return $riga['mail'];
 }
 
 function get_id_ps4($id){

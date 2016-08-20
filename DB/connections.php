@@ -18,12 +18,5 @@ try {
               }
               
               
-function connect_proclub(){
-try {
-      $pc = new PDO('mysql:host=localhost;dbname=Proclub', "root", "");
-      return $pc;
-} catch(PDOException $e) {
-      die("Errore durante la connessione al database!: " . $e->getMessage());
-}
-              }
+
 ?>

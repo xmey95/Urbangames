@@ -60,5 +60,92 @@ function get_group_name($id){
     $db->query("UNLOCK TABLES");
     return $riga['name'];
 }
+
+function get_match_state($id){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}");
+    $id=(int)$id;
+    $query=$db->prepare("SELECT state FROM matches WHERE id = ?");
+    $query->execute(array($id));
+    $state=$query->fetch();
+    $db->query("UNLOCK TABLES");
+    return $state['state'];
+}
+
+function get_match_id_usr1($id){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}");
+    $id=(int)$id;
+    $query=$db->prepare("SELECT id_usr1 FROM matches WHERE id = ?");
+    $query->execute(array($id));
+    $state=$query->fetch();
+    $db->query("UNLOCK TABLES");
+    return $state['id_usr1'];
+}
+
+function get_match_id_usr2($id){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}");
+    $id=(int)$id;
+    $query=$db->prepare("SELECT id_usr2 FROM matches WHERE id = ?");
+    $query->execute(array($id));
+    $state=$query->fetch();
+    $db->query("UNLOCK TABLES");
+    return $state['id_usr2'];
+}
+
+function get_match_g1($id){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}");
+    $id=(int)$id;
+    $query=$db->prepare("SELECT g1 FROM matches WHERE id = ?");
+    $query->execute(array($id));
+    $state=$query->fetch();
+    $db->query("UNLOCK TABLES");
+    return $state['g1'];
+}
+
+function get_match_g2($id){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}");
+    $id=(int)$id;
+    $query=$db->prepare("SELECT g2 FROM matches WHERE id = ?");
+    $query->execute(array($id));
+    $state=$query->fetch();
+    $db->query("UNLOCK TABLES");
+    return $state['g2'];
+}
+
+function get_match_group($id){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}");
+    $id=(int)$id;
+    $query=$db->prepare("SELECT id_gir FROM matches WHERE id = ?");
+    $query->execute(array($id));
+    $state=$query->fetch();
+    $db->query("UNLOCK TABLES");
+    return $state['id_gir'];
+}
+
+function get_match_next($id){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}");
+    $id=(int)$id;
+    $query=$db->prepare("SELECT next FROM matches WHERE id = ?");
+    $query->execute(array($id));
+    $state=$query->fetch();
+    $db->query("UNLOCK TABLES");
+    return $state['next'];
+}
+
+function get_match_winner($id){
+    $id=(int)$id;
+    if(get_match_g1($id) > get_match_g2($id)){
+        return get_match_id_usr1($id);
+    }
+    else{
+        return get_match_id_usr2($id);
+    }
+}
 ?>
 

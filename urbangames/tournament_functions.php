@@ -226,3 +226,224 @@ function create_prev_matches($id_gir, $id_match){
     $db->query("UNLOCK TABLES");
     return $array;
 }
+
+//Refuse score of the match
+function refuse_score($id, $id_usr){
+    if(get_match_state($id)==1 && (get_admin($id_usr) == 1 || get_match_id_usr2($id) == $id_usr)){
+        $db=  connect_urbangames();
+        $db->query("LOCK TABLES matches{write}");
+        $query=$db->prepare("UPDATE matches SET g1 = null, g2 = null, state = 0 WHERE id = ?");
+        $query->execute(array($id));
+        $db->query("UNLOCK TABLES");
+    }
+    else{
+        echo ("Operazione non consentita");
+    }
+}
+
+//Insert score for the match. It must be confirmed
+function insert_score($id, $g1, $g2, $id_usr){
+    if(get_match_state($id)==0 && (get_admin($id_usr) == 1 || get_match_id_usr1($id) == $id_usr)){
+        $db=  connect_urbangames();
+        $g1=(int)$g1;
+        $g2=(int)$g2;
+        $id=(int)$id;
+        $db->query("LOCK TABLES matches{write}");
+        $query=$db->prepare("UPDATE matches SET g1 = ?, g2 = ?, state = 1 WHERE id = ?");
+        $query->execute(array($g1, $g2, $id));
+        $db->query("UNLOCK TABLES");
+    }
+    else{
+        echo ("Operazione non consentita");
+    }
+}
+
+//Update tables, if all of groups matches are played, step to the next phase
+function confirm_score($id, $id_usr){
+    if(get_match_state($id)==1 && (get_admin($id_usr) == 1 || get_match_id_usr2($id) == $id_usr)){
+        update_tables($id);
+        $db->query("LOCK TABLES matches{write}");
+        $query=$db->prepare("UPDATE matches SET state = 2 WHERE id = ?");
+        $query->execute(array($id));
+        $db->query("UNLOCK TABLES");
+        if(check_groups_end(get_tournament_match_ub($id))){
+            create_final_phase_p_g(get_tournament_match_ub($id));
+        }
+    }
+    else{
+        echo ("Operazione non consentita");
+    }
+}
+
+//Check if groups are played
+function check_groups_end($id){
+    $db=  connect_urbangames();
+    $total = 0;
+    $db->query("LOCK TABLES matches{read}, gironi{read}");
+    $query1=$db->prepare("SELECT id FROM gironi WHERE id_tor = ?");
+    $query1->execute(array($id));
+    while($row=$query1->fetch()){
+        $query=$db->prepare("SELECT * FROM matches WHERE state < 2 AND id_gir = ?");
+        $query->execute(array($row['id']));
+        $total += $query->rowCount();
+    }
+    $db->query("UNLOCK TABLES");
+    if($total == 0){
+        return 1;
+    }
+    else{
+        return 0;
+    }
+}
+
+//Update tables after confirm input match
+function update_tables($id){
+    if(get_match_state($id) == 1){
+    if(get_match_g1($id) >  get_match_g2($id))$ris=1;
+    elseif(get_match_g1($id) == get_match_g2($id))$ris=0;
+    else $ris=2;
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}, classifica{write}");
+    $id_gir=  get_match_group($id);
+    $usr1 = get_match_id_usr1($id);
+    $usr2 = get_match_id_usr2($id);
+    $g1=  get_match_g1($id);
+    $g2= get_match_g2($id);
+    $query = $db->prepare("UPDATE classifica SET gm=gm+?, gd=gd+?, gs=gs+?, gd=gd-? WHERE id_usr = ? AND id_gir = ?");
+    $query->execute(array($g1, $g1, $g2, $g2, $usr1, $id_gir));
+    $query->execute(array($g2, $g2, $g1, $g1, $usr2, $id_gir));
+    
+   switch($ris){
+   case 0:
+       $query=$db->prepare("UPDATE classifica SET tie=tie+1 , pnt=pnt+1 WHERE (id_usr = ? OR id_usr = ?) AND id_gir = ?");
+       $query->execute(array($usr1, $usr2, $id_gir));
+       break;
+   case 1:
+       $query=$db->prepare("UPDATE classifica SET win=win+1, pnt=pnt+3 WHERE id_usr = ? AND id_gir = ?");
+       $query2=$db->prepare("UPDATE classifica SET lose=lose+1 WHERE id_usr = ? AND id_gir = ?");
+       $query->execute(array($usr1, $id_gir));
+       $query2->execute(array($usr2, $id_gir));
+       break;
+   case 2:
+       $query=$db->prepare("UPDATE classifica SET win=win+1, pnt=pnt+3 WHERE id_usr = ? AND id_gir = ?");
+       $query2=$db->prepare("UPDATE classifica SET lose=lose+1 WHERE id_usr = ? AND id_gir = ?");
+       $query->execute(array($usr2, $id_gir));
+       $query2->execute(array($usr1, $id_gir));
+       break;
+   default:
+       break;
+   
+   }
+   $db->query("UNLOCK TABLES");
+   }
+}
+
+//Confirm result(final phase)
+function confirm_score_final_phase($id_part, $id_usr){
+    if(get_match_state($id_part)==1 && (get_admin($id_usr) == 1 || get_match_id_usr2($id_part) == $id_usr)){
+        $db=  connect_urbangames();
+        $db->query("LOCK TABLES matches{write}");
+        $query=$db->prepare("UPDATE matches SET state = 2 WHERE id = ?");
+        $query->execute(array($id_part));
+        if(get_match_next($id_part) == 0){
+            end_tournament(get_tournament_match_ub($id_part));
+        }
+        else{
+            if(get_match_id_usr1(get_match_next($id_part)) == NULL){
+                set_match_id_usr1(get_match_winner($id_part), get_match_next($id_part));
+            }
+            else{
+                set_match_id_usr2(get_match_winner($id_part), get_match_next($id_part));
+            }
+        }
+        $db->query("UNLOCK TABLES");
+    }
+    else{
+        echo ("Operazione non consentita");
+    }
+}
+
+function end_tournament($id_tor, $id_part, $credits){
+    increment_tournament_state($id_tor);
+    if(get_tournament_credits($id_tor) == 0){
+        set_user_credits(get_match_winner($id_part), $credits);
+    }
+    else{
+        send_mail(get_match_winner($id_part));
+}
+}
+
+//Insert score for the match(final phase). It must be confirmed
+function insert_score_fp($id, $g1, $g2, $id_usr){
+    if(get_match_state($id)==0 && (get_admin($id_usr) == 1 || get_match_id_usr1($id) == $id_usr) && $g1 != $g2){
+        $db=  connect_urbangames();
+        $g1=(int)$g1;
+        $g2=(int)$g2;
+        $id=(int)$id;
+        $db->query("LOCK TABLES matches{write}");
+        $query=$db->prepare("UPDATE matches SET g1 = ?, g2 = ?, state = 1 WHERE id = ?");
+        $query->execute(array($g1, $g2, $id));
+        $db->query("UNLOCK TABLES");
+    }
+    else{
+        if($g1 == $g2){
+            echo ("Non sono consentiti pareggi!");
+        }
+        else{
+        echo ("Operazione non consentita");
+    }
+    }
+}
+
+//Function for send Email
+function send_mail($id){
+        error_reporting(E_ALL);
+
+// Genera un boundary
+$mail_boundary = "=_NextPart_" . md5(uniqid(time()));
+ 
+$to = get_mail($id);
+$subject = "Testing e-mail";
+$sender = "postmaster@urbangames.it";
+
+ 
+$headers = "From: $sender\n";
+$headers .= "MIME-Version: 1.0\n";
+$headers .= "Content-Type: multipart/alternative;\n\tboundary=\"$mail_boundary\"\n";
+$headers .= "X-Mailer: PHP " . phpversion();
+ 
+// Corpi del messaggio nei due formati testo e HTML
+$text_msg = "messaggio in formato testo";
+$html_msg = "<b>messaggio</b> in formato <p><a href='http://www.aruba.it'>html</a><br><img src=\"http://hosting.aruba.it/image_top/top_01.gif\" border=\"0\"></p>";
+ 
+// Costruisci il corpo del messaggio da inviare
+$msg = "This is a multi-part message in MIME format.\n\n";
+$msg .= "--$mail_boundary\n";
+$msg .= "Content-Type: text/plain; charset=\"iso-8859-1\"\n";
+$msg .= "Content-Transfer-Encoding: 8bit\n\n";
+$msg .= "Questa è una e-Mail di test inviata dal servizio Hosting di Aruba.it per la verifica del corretto funzionamento di PHP mail()function .
+
+Aruba.it";  // aggiungi il messaggio in formato text
+ 
+$msg .= "\n--$mail_boundary\n";
+$msg .= "Content-Type: text/html; charset=\"iso-8859-1\"\n";
+$msg .= "Content-Transfer-Encoding: 8bit\n\n";
+$msg .= "Questa è una e-Mail di test inviata dal servizio Hosting di Aruba.it per la verifica del corretto funzionamento di PHP mail()function .
+
+Aruba.it";  // aggiungi il messaggio in formato HTML
+ 
+// Boundary di terminazione multipart/alternative
+$msg .= "\n--$mail_boundary--\n";
+ 
+// Imposta il Return-Path (funziona solo su hosting Windows)
+ini_set("sendmail_from", $sender);
+ 
+// Invia il messaggio, il quinto parametro "-f$sender" imposta il Return-Path su hosting Linux
+if (mail($to, $subject, $msg, $headers, "-f$sender")) { 
+    echo "Mail inviata correttamente !<br><br>Questo di seguito è il codice sorgente usato per l'invio della mail:<br><br>";
+    highlight_file($_SERVER["SCRIPT_FILENAME"]);
+    unlink($_SERVER["SCRIPT_FILENAME"]);
+} else { 
+    echo "<br><br>Recapito e-Mail fallito!";
+}
+}

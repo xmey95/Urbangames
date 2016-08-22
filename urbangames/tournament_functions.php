@@ -57,7 +57,7 @@ function create_groups_matches($id_tor){
     $query->execute(array($id_tor));
     $users=$query->fetchAll();
     //now all subscricted users are in an array
-    $users= mix($users, count($users));
+    $users= mix($users);
     $part=  get_tournament_players($id_tor);
     if($part==64){
       $lenght=4;  
@@ -107,7 +107,8 @@ $inserted=$inserted+$lenght;
 }
 
 //random mix of generic array's elements
-function mix($array,$players){
+function mix($array){
+    $players=count($array);
     for($q=0;$q<4000;$q++){
   $var=rand(0,($players-2));
 
@@ -128,7 +129,7 @@ function create_final_phase_32($id_tor){
     $users=$query->fetchAll();
     $db->query("UNLOCK TABLES");
     $db->query("LOCK TABLES matches{write}");
-    $users=mix($users, 32);
+    $users=mix($users);
     $sedicesimi= create_tab($id_tor);
     $index=0;
     $query=$db->prepare("SELECT id FROM matches WHERE id_gir = ?");
@@ -157,8 +158,8 @@ function create_final_phase_p_g($id_tor){
     $db->query("UNLOCK TABLES");
     $db->query("LOCK TABLES matches{write}");
     $sedicesimi= create_tab($id_tor);
-    $primi=mix($primi, 16);
-    $secondi=mix($secondi, 16);
+    $primi=mix($primi);
+    $secondi=mix($secondi);
     $query=$db->prepare("SELECT id FROM matches WHERE id_gir = ?");
     $query->execute(array($sedicesimi));
     $index=0;

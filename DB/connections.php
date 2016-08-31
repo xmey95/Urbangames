@@ -16,7 +16,4 @@ try {
       die("Errore durante la connessione al database!: " . $e->getMessage());
 }
               }
-              
-              
-
 ?>

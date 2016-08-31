@@ -1,0 +1,180 @@
+<header class="main-header">
+    <!-- Logo -->
+    <a href="index.php" class="logo">
+      <!-- mini logo for sidebar mini 50x50 pixels -->
+      <span class="logo-mini"><b>U</b>G</span>
+      <!-- logo for regular state and mobile devices -->
+      <span class="logo-lg"><b>Urban</b>Games</span>
+    </a>
+    <!-- Header Navbar: style can be found in header.less -->
+    <nav class="navbar navbar-static-top">
+      <!-- Sidebar toggle button-->
+      <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+        <span class="sr-only">Toggle navigation</span>
+      </a>
+
+      <div class="navbar-custom-menu">
+        <ul class="nav navbar-nav">
+          <!-- Tasks: style can be found in dropdown.less -->
+          <?php if(isset($_SESSION['username'])){ ?>
+          <li class="dropdown tasks-menu">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+              <i class="fa fa-exclamation-circle"></i>
+              <span class="label label-danger"><?php echo get_notification(get_id($_SESSION['username'])); ?></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="header">You have <?php echo get_notification(get_id($_SESSION['username'])); ?> activities</li>
+              <li>
+                <!-- inner menu: contains the actual data -->
+                <ul class="menu">
+                  <li>
+                    <a href="#">
+                      <i class="fa fa-repeat text-aqua"></i> Hai <?php echo get_mytournament(get_id($_SESSION['username'])); ?> Tornei in corso
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <i class="fa fa-soccer-ball-o text-aqua"></i> Hai <?php echo get_to_play(get_id($_SESSION['username'])); ?> partite da giocare
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <i class="fa fa-check-square-o text-aqua"></i> Hai <?php echo get_to_confirm(get_id($_SESSION['username'])); ?> risultati da confermare
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <i class="fa fa-plus text-aqua"></i> Ci sono <?php echo get_available_tournament(get_id($_SESSION['username'])); ?> Tornei disponibili
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <!-- User Account: style can be found in dropdown.less -->
+          <li class="dropdown user user-menu">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+              <img src="images/profile_images/<?php echo get_img(get_id($_SESSION['username'])); ?>" class="user-image" alt="User Image">
+              <span class="hidden-xs"><?php echo $_SESSION['username']; ?></span>
+            </a>
+            <ul class="dropdown-menu">
+              <!-- User image -->
+              <li class="user-header">
+                <img src="images/profile_images/<?php echo get_img(get_id($_SESSION['username'])); ?>" class="img-circle" alt="User Image">
+
+                <p>
+                  <?php echo $_SESSION['username']; ?>
+                </p>
+              </li>
+              <!-- Menu Body -->
+              <li class="user-body">
+                <div class="row">
+                  <div class="col-xs-3 text-left">
+                    <a href="#">Credits:</a>
+                  </div>
+                  <div class="col-xs-4 text-left">
+                    <a href="#"><?php echo get_balance(get_id($_SESSION['username'])); ?></a>
+                    <i class="fa fa-money text-green"></i>
+                  </div>
+                  <div class="col-xs-5 text-right">
+                    <a href="#">Shop <i class="fa fa-shopping-cart text-blue"></i></a>
+                  </div>
+                </div>
+                <!-- /.row -->
+              </li>
+              <!-- Menu Footer-->
+              <li class="user-footer">
+                <div class="pull-left">
+                  <a href="#" class="btn btn-default btn-flat">Profile</a>
+                </div>
+                <div class="pull-right">
+                  <a href="#" class="btn btn-default btn-flat">Sign out</a>
+                </div>
+              </li>
+            </ul>
+          </li>
+          <?php } else{
+            ?>
+            <div class="button-signin">
+            <a href="#"><button type="button" class="btn btn-block btn-danger">Sign in</button></a>
+            </div>
+          <?php
+          }
+          ?>
+        </ul>
+      </div>
+    </nav>
+  </header>
+  <!-- Left side column. contains the logo and sidebar -->
+  <aside class="main-sidebar">
+    <!-- sidebar: style can be found in sidebar.less -->
+    <section class="sidebar">
+      <!-- Sidebar user panel -->
+     <?php if(isset($_SESSION['username'])){ ?>
+      <div class="user-panel">
+        <div class="pull-left image">
+          <img src="images/profile_images/<?php echo get_img(get_id($_SESSION['username'])); ?>" class="img-circle" alt="User Image">
+        </div>
+        <div class="pull-left info">
+          <p><?php echo $_SESSION['username']; ?></p>
+          <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
+        </div>
+      </div>
+      <?php }
+      ?>
+            <!-- sidebar menu: : style can be found in sidebar.less -->
+      <ul class="sidebar-menu">
+        <li class="header">MAIN NAVIGATION</li>
+        <li class="active treeview">
+          <a href="#">
+            <i class="fa fa-trophy"></i> <span>Tornei</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+            <li class="active"><a href="index.html"><i class="fa fa-circle-o"></i> Tutti i tornei</a></li>
+            <li><a href="index2.html"><i class="fa fa-circle-o text-aqua"></i> Tornei FREE</a></li>
+            <li><a href="index2.html"><i class="fa fa-circle-o text-green"></i> Tornei PRO</a></li>
+            <?php if(isset($_SESSION['username'])){ ?>
+            <li><a href="index2.html"><i class="fa fa-circle-o text-yellow"></i> Miei Tornei</a></li>
+             <?php }
+             ?>
+          </ul>
+        </li>
+        <li class="treeview">
+          <a href="#">
+            <i class="fa fa-share-alt"></i>
+            <span>Social</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+            <li><a href="pages/layout/top-nav.html"><i class="fa fa-facebook"></i> Facebook</a></li>
+            <li><a href="pages/layout/boxed.html"><i class="fa fa-twitter"></i> Twitter</a></li>
+            <li><a href="pages/layout/fixed.html"><i class="fa fa-google-plus"></i> Google +</a></li>
+            <li><a href="pages/layout/collapsed-sidebar.html"><i class="fa fa-youtube"></i> Youtube</a></li>
+          </ul>
+        </li>
+        <li class="treeview">
+          <a href="#">
+            <i class="fa fa-question-circle"></i>
+            <span>Contatti</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+            <li><a href="pages/layout/top-nav.html"><i class="fa fa-paper-plane"></i> Telegram</a></li>
+            <li><a href="pages/layout/boxed.html"><i class="fa fa-envelope"></i> Mail</a></li>
+          </ul>
+        </li>
+        <li><a href="documentation/index.html"><i class="fa fa-book"></i> <span>Regolamento</span></a></li>
+        <?php if(isset($_SESSION['username']) && get_admin(get_id($_SESSION['username']))){ ?>
+        <li><a href="documentation/index.html"><i class="fa fa-user"></i> <span>Admin</span></a></li>
+        <?php } ?>
+      </ul>
+    </section>
+    <!-- /.sidebar -->
+  </aside>

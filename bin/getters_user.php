@@ -64,7 +64,7 @@ function get_img($id){
     $riga=$query->fetch();
     if($riga['img']==NULL){
         $db_users->query("UNLOCK TABLES");
-        return "Default";
+        return "Default.png";
     }
     $db_users->query("UNLOCK TABLES");
     return $riga['img'];

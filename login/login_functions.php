@@ -1,5 +1,4 @@
 <?php
-include ('../DB/connections.php');
 
 function login($username, $password){
     $db=  connect_users();
@@ -16,7 +15,7 @@ function check_username($var){
     $query->execute(array($var));
 
     if($query->rowCount() == 0){
-     echo ("Username non trovato!");
+    display_yellow_alert("Username non riconosciuto!");
      return 0;
     }
     return 1;
@@ -28,7 +27,7 @@ function check_password($var, $username){
     $query= $db->prepare("SELECT * FROM users WHERE username LIKE ? AND password = ?");
     $query->execute(array($username, $password));
     if($query->rowCount() == 0){
-        echo ("Password errata!");
+display_red_alert("Password errata!");
         return 0;
     }
     return 1;

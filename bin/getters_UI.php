@@ -1,7 +1,7 @@
 <?php
-include 'DB/connections.php';
 function get_to_play($id){
     $db =  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}, gironi{read}, iscrizione{read}");
     $count=0;
     $query=$db->prepare("SELECT id_tor FROM iscrizione WHERE id_usr = ?");
     $query->execute(array($id));
@@ -14,11 +14,13 @@ function get_to_play($id){
             $count+=$query3->rowCount();
         }
     }
+    $db->query("UNLOCK TABLES");
     return $count;
 }
 
 function get_to_confirm($id){
     $db =  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}, gironi{read}, iscrizione{read}");
     $count=0;
     $query=$db->prepare("SELECT id_tor FROM iscrizione WHERE id_usr = ?");
     $query->execute(array($id));
@@ -31,27 +33,49 @@ function get_to_confirm($id){
             $count+=$query3->rowCount();
         }
     }
+    $db->query("UNLOCK TABLES");
     return $count;
 }
 
-function get_mytournament($id){
-     $db =  connect_urbangames();
+function get_my_active_tournament($id){
+    $db =  connect_urbangames();
+    $db->query("LOCK TABLES iscrizione{read}");
     $count=0;
     $query=$db->prepare("SELECT id_tor FROM iscrizione WHERE id_usr = ?");
     $query->execute(array($id));
     while($tor=$query->fetch()['id_tor']){
+        if(get_tournament_state($tor)==1){
         $count++;
+        }
     }
+    $db->query("UNLOCK TABLES");
+    return $count;
+}
+
+function get_my_not_started_tournament($id){
+    $db =  connect_urbangames();
+    $db->query("LOCK TABLES iscrizione{read}");
+    $count=0;
+    $query=$db->prepare("SELECT id_tor FROM iscrizione WHERE id_usr = ?");
+    $query->execute(array($id));
+    while($tor=$query->fetch()['id_tor']){
+        if(get_tournament_state($tor)==0){
+        $count++;
+        }
+    }
+    $db->query("UNLOCK TABLES");
     return $count;
 }
 
 function get_available_tournament($id){
     $db=  connect_urbangames();
+    $db->query("LOCK TABLES torneo{read}, iscrizione{read}");
     $query=$db->prepare("SELECT id AS primo FROM torneo WHERE state = 0 AND NOT EXIST(SELECT * FROM iscrizione WHERE id_tor LIKE primo AND id_usr = ?)");
     $query->execute(array($id));
+    $db->query("UNLOCK TABLES");
     return $query->rowCount();
 }
 
 function get_notification($id){
-    return get_to_play($id)+get_to_confirm($id)+get_mytournament($id)+get_available_tournament($id);
+    return get_to_play($id)+get_to_confirm($id)+get_my_active_tournament($id)+get_available_tournament($id)+  get_my_not_started_tournament($id);
 }

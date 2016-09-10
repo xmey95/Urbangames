@@ -6,14 +6,10 @@
   include ("bin/getters_ub.php");
   include ("DB/connections.php");
   include ("bin/getters_user.php");
-  include ("bin/refresh_user.php");
-  if(isset($_POST['submit'])){
-  refresh_user_img('rannipabsu40', get_id($_SESSION['username']));
-}
-   ?>
+  include ("bin/displays_ub.php"); ?>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Urbangames | Home</title>
+  <title>Urbangames | I miei tornei</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <!-- Bootstrap 3.3.6 -->
@@ -54,11 +50,38 @@
   <?php include ("includes/header_sidebar.php"); ?>
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
-    <form action="index.php" method="post" enctype="multipart/form-data">
-    Select image to upload:
-    <input type="file" name="fileToUpload" id="fileToUpload">
-    <input type="submit" value="Upload Image" name="submit">
-</form>
+    <section class="content-header">
+      <h1>
+        I miei tornei
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="index.php"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">I  miei tornei</li>
+      </ol>
+    </section>
+    <section class="content">
+    <div class="box">
+            <!-- /.box-header -->
+            <div class="box-body">
+              <table class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th class="hidden-xs">Partecipanti</th>
+                  <th>Premio</th>
+                  <!--<th>Costo iscrizione</th>-->
+                  <th>Stato</th>
+                  <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                 <?php display_mytournaments_ub(get_id($_SESSION['username']));?>
+                </tbody>
+              </table>
+            </div>
+            <!-- /.box-body -->
+          </div>
+        </section>
   </div>
   <!-- /.content-wrapper -->
   <?php include ("includes/footer.html"); ?>

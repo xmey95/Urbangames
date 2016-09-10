@@ -6,14 +6,11 @@
   include ("bin/getters_ub.php");
   include ("DB/connections.php");
   include ("bin/getters_user.php");
-  include ("bin/refresh_user.php");
-  if(isset($_POST['submit'])){
-  refresh_user_img('rannipabsu40', get_id($_SESSION['username']));
-}
-   ?>
+  include ("bin/displays_ub.php");
+  include ("urbangames/tournament_functions.php"); ?>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Urbangames | Home</title>
+  <title>Urbangames | Tutti i tornei</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <!-- Bootstrap 3.3.6 -->
@@ -54,11 +51,104 @@
   <?php include ("includes/header_sidebar.php"); ?>
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
-    <form action="index.php" method="post" enctype="multipart/form-data">
-    Select image to upload:
-    <input type="file" name="fileToUpload" id="fileToUpload">
-    <input type="submit" value="Upload Image" name="submit">
-</form>
+    <section class="content-header">
+      <h1>
+        Tutti i tornei
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="index.php"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Tutti i tornei</li>
+      </ol>
+    </section>
+    <section class="content">
+    <div class="box">
+            <!-- /.box-header -->
+            <div class="box-body">
+              <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+              <li class="active"><a href="#32" data-toggle="tab">32 squadre</a></li>
+              <li><a href="#64" data-toggle="tab">64 squadre</a></li>
+              <li><a href="#128" data-toggle="tab">128 squadre</a></li>
+            </ul>
+            <div class="tab-content">
+              <div class="active tab-pane" id="32">
+               <div class="box">
+            <!-- /.box-header -->
+            <div class="box-body">
+              <table class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th class="hidden-xs">Partecipanti</th>
+                  <th>Premio</th>
+                  <th>Stato</th>
+                  <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                 <?php display_tournaments_ub(0,32);?>
+                </tbody>
+              </table>
+            </div>
+            <!-- /.box-body -->
+          </div>
+              </div>
+              <!-- /.tab-pane -->
+              <div class="tab-pane" id="64">
+                <div class="box-body">
+                 <div class="box">
+            <!-- /.box-header -->
+            <div class="box-body">
+              <table class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th class="hidden-xs">Partecipanti</th>
+                  <th>Premio</th>
+                  <th>Stato</th>
+                  <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                 <?php display_tournaments_ub(0,64);?>
+                </tbody>
+              </table>
+            </div>
+            <!-- /.box-body -->
+          </div>
+               </div>
+              </div>
+              <!-- /.tab-pane -->
+              <div class="tab-pane" id="128">
+               <div class="box">
+            <!-- /.box-header -->
+            <div class="box-body">
+              <table class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th class="hidden-xs">Partecipanti</th>
+                  <th>Premio</th>
+                  <th>Stato</th>
+                  <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                 <?php display_tournaments_ub(0,128);?>
+                </tbody>
+              </table>
+            </div>
+            <!-- /.box-body -->
+          </div>
+              </div>
+              <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+          </div>
+            </div>
+            <!-- /.box-body -->
+          </div>
+        </section>
   </div>
   <!-- /.content-wrapper -->
   <?php include ("includes/footer.html"); ?>

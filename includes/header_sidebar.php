@@ -2,7 +2,7 @@
     <!-- Logo -->
     <a href="index.php" class="logo">
       <!-- mini logo for sidebar mini 50x50 pixels -->
-      <span class="logo-mini"><b>U</b>G</span>
+      <span class="logo-mini"><img class="adapted-image" src="images/logos/mini_logo.png"></span>
       <!-- logo for regular state and mobile devices -->
       <span class="logo-lg"><b>Urban</b>Games</span>
     </a>
@@ -29,22 +29,27 @@
                 <ul class="menu">
                   <li>
                     <a href="#">
-                      <i class="fa fa-repeat text-aqua"></i> Hai <?php echo get_mytournament(get_id($_SESSION['username'])); ?> Tornei in corso
+                      <i class="fa fa-repeat text-blue margin-r-5 "></i> Hai <?php echo get_my_active_tournament(get_id($_SESSION['username'])); ?> Tornei in corso
                     </a>
                   </li>
                   <li>
                     <a href="#">
-                      <i class="fa fa-soccer-ball-o text-aqua"></i> Hai <?php echo get_to_play(get_id($_SESSION['username'])); ?> partite da giocare
+                      <i class="fa fa-registered text-blue margin-r-5 "></i> Hai <?php echo get_my_not_started_tournament(get_id($_SESSION['username'])); ?> Tornei ancora in fase di iscrizione
                     </a>
                   </li>
                   <li>
                     <a href="#">
-                      <i class="fa fa-check-square-o text-aqua"></i> Hai <?php echo get_to_confirm(get_id($_SESSION['username'])); ?> risultati da confermare
+                      <i class="fa fa-soccer-ball-o text-blue margin-r-5 "></i> Hai <?php echo get_to_play(get_id($_SESSION['username'])); ?> partite da giocare
                     </a>
                   </li>
                   <li>
                     <a href="#">
-                      <i class="fa fa-plus text-aqua"></i> Ci sono <?php echo get_available_tournament(get_id($_SESSION['username'])); ?> Tornei disponibili
+                      <i class="fa fa-check-square-o text-blue margin-r-5 "></i> Hai <?php echo get_to_confirm(get_id($_SESSION['username'])); ?> risultati da confermare
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <i class="fa fa-plus text-blue margin-r-5 "></i> Ci sono <?php echo get_available_tournament(get_id($_SESSION['username'])); ?> Tornei disponibili
                     </a>
                   </li>
                 </ul>
@@ -65,9 +70,15 @@
                 <p>
                   <?php echo $_SESSION['username']; ?>
                 </p>
+                <div class="pull-left">
+                  <a href="profile.php?id=<?php echo get_id($_SESSION['username'])?>"><button type="button" class="btn btn-block btn-warning button-dropdown">Profile</button></a>
+                </div>
+                <div class="pull-right">
+                  <a href="login/login.php"><button type="button" class="btn btn-block btn-danger button-dropdown">Sign out</button></a>
+                </div>
               </li>
               <!-- Menu Body -->
-              <li class="user-body">
+              <!--<li class="user-body">
                 <div class="row">
                   <div class="col-xs-3 text-left">
                     <a href="#">Credits:</a>
@@ -80,23 +91,14 @@
                     <a href="#">Shop <i class="fa fa-shopping-cart text-blue"></i></a>
                   </div>
                 </div>
-                <!-- /.row -->
-              </li>
+              </li>-->
               <!-- Menu Footer-->
-              <li class="user-footer">
-                <div class="pull-left">
-                  <a href="#" class="btn btn-default btn-flat">Profile</a>
-                </div>
-                <div class="pull-right">
-                  <a href="#" class="btn btn-default btn-flat">Sign out</a>
-                </div>
-              </li>
             </ul>
           </li>
           <?php } else{
             ?>
             <div class="button-signin">
-            <a href="#"><button type="button" class="btn btn-block btn-danger">Sign in</button></a>
+            <a href="login/login.php"><button type="button" class="btn btn-block btn-danger">Sign in</button></a>
             </div>
           <?php
           }
@@ -112,8 +114,8 @@
       <!-- Sidebar user panel -->
      <?php if(isset($_SESSION['username'])){ ?>
       <div class="user-panel">
-        <div class="pull-left image">
-          <img src="images/profile_images/<?php echo get_img(get_id($_SESSION['username'])); ?>" class="img-circle" alt="User Image">
+        <div style="min-height: 30px;" class="pull-left image">
+           <img style="height: 100%;" src="images/profile_images/<?php echo get_img(get_id($_SESSION['username'])); ?>" class="img-circle" alt="User Image">
         </div>
         <div class="pull-left info">
           <p><?php echo $_SESSION['username']; ?></p>
@@ -133,11 +135,12 @@
             </span>
           </a>
           <ul class="treeview-menu">
-            <li class="active"><a href="index.html"><i class="fa fa-circle-o"></i> Tutti i tornei</a></li>
-            <li><a href="index2.html"><i class="fa fa-circle-o text-aqua"></i> Tornei FREE</a></li>
-            <li><a href="index2.html"><i class="fa fa-circle-o text-green"></i> Tornei PRO</a></li>
+            <li class="active"><a href="all_tournaments.php"><i class="fa fa-circle-o"></i> Tutti i tornei</a></li>
+            <li><a href="gt_tournaments.php"><i class="fa fa-circle-o text-green"></i> Tornei Gamestime</a></li>
+            <!--<li><a href="free_tournaments.php"><i class="fa fa-circle-o text-aqua"></i> Tornei FREE</a></li>
+            <li><a href="pro_tournaments.php"><i class="fa fa-circle-o text-green"></i> Tornei PRO</a></li>-->
             <?php if(isset($_SESSION['username'])){ ?>
-            <li><a href="index2.html"><i class="fa fa-circle-o text-yellow"></i> Miei Tornei</a></li>
+            <li><a href="my_tournaments.php"><i class="fa fa-circle-o text-yellow"></i> Miei Tornei</a></li>
              <?php }
              ?>
           </ul>
@@ -172,7 +175,7 @@
         </li>
         <li><a href="documentation/index.html"><i class="fa fa-book"></i> <span>Regolamento</span></a></li>
         <?php if(isset($_SESSION['username']) && get_admin(get_id($_SESSION['username']))){ ?>
-        <li><a href="documentation/index.html"><i class="fa fa-user"></i> <span>Admin</span></a></li>
+        <li><a href="admin.php"><i class="fa fa-user"></i> <span>Admin</span></a></li>
         <?php } ?>
       </ul>
     </section>

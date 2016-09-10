@@ -1,10 +1,5 @@
 <?php
 
-include ('DB/connections.php');
-include ('bin/getters_ub.php');
-include ('bin/setters_ub.php');
-include ('bin/getters_user.php');
-
 //Subscription Function
 function subscribe($id_usr, $id_tor){
     if(get_tournament_players($id_tor) > check_part($id_tor)){
@@ -37,6 +32,62 @@ function subscribe($id_usr, $id_tor){
             }
         }
     }
+}
+
+function subscribe_gt($id_usr, $id_tor,$code){
+    if(get_tournament_players($id_tor) > check_part($id_tor)){
+        $db= connect_urbangames();
+        $db->query("LOCK TABLES iscrizione{write}");
+        if(get_balance($id_usr) < get_tournament_credits($id_tor)){
+            echo("Credito insufficente");
+            $db->query("UNLOCK TABLES");
+            return;
+        }
+    if(check_code($id_tor, $code)==0){
+        $db->query("UNLOCK TABLES");
+        return;
+    }
+        $query=$db->prepare("INSERT INTO iscrizione (id_usr, id_tor, id_admin) VALUES (?, ?, ?)");
+        $query->execute(array($id_usr, $id_tor, get_code_admin(get_id_code($code))));
+        discard_code(get_id_code($code));   
+        $db->query("UNLOCK TABLES");
+        $db_users= connect_users();
+        $db_users->query("LOCK TABLES users{write}");
+        $query=$db_users->prepare("UPDATE users SET balance = ? WHERE id = ?");
+        $query->execute(array(get_balance($id_usr)-get_tournament_credits($id_tor), $id_usr));
+        $db_users->query("UNLOCK TABLES");
+        echo("Iscrizione effettuata");
+        if(get_tournament_players($id_tor) <= check_part($id_tor)){
+            if(get_tournament_players($id_tor) == 32){
+                increment_tournament_state($id_tor);
+                create_final_phase_32($id_tor);
+                echo("creata fase ad eliminazione");
+            }
+            elseif(get_tournament_players($id_tor) == 64 || get_tournament_players($id_tor) == 128){
+                increment_tournament_state($id_tor);
+                create_groups_matches($id_tor);
+                echo("creata fase a gironi");
+            }
+        }
+    }
+}
+
+function discard_code($code){
+        $db=  connect_users();
+        $db->query("LOCK TABLES gt_management{write},codes{write}");
+        $query=$db->prepare("SELECT * FROM gt_management WHERE id_admin = ? and id_tor = ?");
+        $query->execute(array(get_code_admin($code),get_code_tournament($code)));
+        $count=$query->rowCount();
+        if($count>0){
+           $query= $db->prepare("UPDATE gt_management SET n_codes = n_codes + 1 WHERE id_tor = ? AND id_admin = ?");
+           $query->execute(array(get_code_tournament($code, get_code_admin($code))));
+        }else{
+            $query = $db->prepare("INSERT INTO gt_management (id_admin,id_tor) VALUES (?,?)");
+            $query->execute(array(get_code_admin($code),get_code_tournament($code)));
+        }
+        $query=$db->prepare("DELETE FROM codes WHERE id = ?");
+        $query->execute(array($code));
+        $db->query("UNLOCK TABLES");
 }
 
 //Return the number of subscriptions for this tournament
@@ -230,7 +281,7 @@ function create_prev_matches($id_gir, $id_match){
 
 //Refuse score of the match
 function refuse_score($id, $id_usr){
-    if(get_match_state($id)==1 && (get_admin($id_usr) == 1 || get_match_id_usr2($id) == $id_usr)){
+    if(get_match_state($id)==1 && (get_admin($id_usr) == 1 || get_match_id_usr2($id) == $id_usr || get_match_id_usr1($id) == $id_usr)){
         $db=  connect_urbangames();
         $db->query("LOCK TABLES matches{write}");
         $query=$db->prepare("UPDATE matches SET g1 = null, g2 = null, state = 0 WHERE id = ?");
@@ -262,7 +313,15 @@ function insert_score($id, $g1, $g2, $id_usr){
 //Update tables, if all of groups matches are played, step to the next phase
 function confirm_score($id, $id_usr){
     if(get_match_state($id)==1 && (get_admin($id_usr) == 1 || get_match_id_usr2($id) == $id_usr)){
+        if(get_match_result($id)!=0){
+        increment_win(get_match_winner($id));
+        increment_lose(get_match_loser($id));
+        }else{
+            increment_tie(get_match_id_usr1($id));
+            increment_tie(get_match_id_usr2($id));
+        }
         update_tables($id);
+        $db=  connect_urbangames();
         $db->query("LOCK TABLES matches{write}");
         $query=$db->prepare("UPDATE matches SET state = 2 WHERE id = ?");
         $query->execute(array($id));
@@ -276,8 +335,41 @@ function confirm_score($id, $id_usr){
     }
 }
 
+function cancel_score($id){
+    if(get_match_state($id)==2 && get_admin(get_id($_SESSION['username'])) == 1){
+        if(get_match_result($id)!=0){
+        decrement_win(get_match_winner($id));
+        decrement_lose(get_match_loser($id));
+        }else{
+            decrement_tie(get_match_id_usr1($id));
+            decrement_tie(get_match_id_usr2($id));
+        }
+        if(get_group_cat(get_match_group($id))==0){
+        update_tables_c($id);
+        }
+        $db=  connect_urbangames();
+        $db->query("LOCK TABLES matches{write}");
+        $query=$db->prepare("UPDATE matches SET state = 0 WHERE id = ?");
+        $query->execute(array($id));
+        $db->query("UNLOCK TABLES");
+        $db->query("LOCK TABLES matches{write}");
+        $query=$db->prepare("UPDATE matches SET g1 = null, g2 = null, state = 0 WHERE id = ?");
+        $query->execute(array($id));
+        $db->query("UNLOCK TABLES");
+    }
+    else{
+        echo ("Operazione non consentita");
+    }
+}
+
 //Check if groups are played
 function check_groups_end($id){
+    if(get_tournament_state($id) == 0){
+        return 0;
+    }
+    if(get_tournament_players($id)==32){
+        return 1;
+    }
     $db=  connect_urbangames();
     $total = 0;
     $db->query("LOCK TABLES matches{read}, gironi{read}");
@@ -339,9 +431,56 @@ function update_tables($id){
    }
 }
 
+function update_tables_c($id){
+    if(get_match_state($id) == 2){
+    if(get_match_g1($id) >  get_match_g2($id))$ris=1;
+    elseif(get_match_g1($id) == get_match_g2($id))$ris=0;
+    else $ris=2;
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES matches{read}, classifica{write}");
+    $id_gir=  get_match_group($id);
+    $usr1 = get_match_id_usr1($id);
+    $usr2 = get_match_id_usr2($id);
+    $g1=  get_match_g1($id);
+    $g2= get_match_g2($id);
+    $query = $db->prepare("UPDATE classifica SET gm=gm-?, gd=gd-?, gs=gs-?, gd=gd+? WHERE id_usr = ? AND id_gir = ?");
+    $query->execute(array($g1, $g1, $g2, $g2, $usr1, $id_gir));
+    $query->execute(array($g2, $g2, $g1, $g1, $usr2, $id_gir));
+    
+   switch($ris){
+   case 0:
+       $query=$db->prepare("UPDATE classifica SET tie=tie-1 , pnt=pnt-1 WHERE (id_usr = ? OR id_usr = ?) AND id_gir = ?");
+       $query->execute(array($usr1, $usr2, $id_gir));
+       break;
+   case 1:
+       $query=$db->prepare("UPDATE classifica SET win=win-1, pnt=pnt-3 WHERE id_usr = ? AND id_gir = ?");
+       $query2=$db->prepare("UPDATE classifica SET lose=lose-1 WHERE id_usr = ? AND id_gir = ?");
+       $query->execute(array($usr1, $id_gir));
+       $query2->execute(array($usr2, $id_gir));
+       break;
+   case 2:
+       $query=$db->prepare("UPDATE classifica SET win=win-1, pnt=pnt-3 WHERE id_usr = ? AND id_gir = ?");
+       $query2=$db->prepare("UPDATE classifica SET lose=lose-1 WHERE id_usr = ? AND id_gir = ?");
+       $query->execute(array($usr2, $id_gir));
+       $query2->execute(array($usr1, $id_gir));
+       break;
+   default:
+       break;
+   
+   }
+   $db->query("UNLOCK TABLES");
+   }
+}
+
 //Confirm result(final phase)
 function confirm_score_final_phase($id_part, $id_usr){
+    if(get_match_result==0){
+        echo "Pareggi non consentiti nella fase finale, ripetere la partita!";
+        return;
+    }
     if(get_match_state($id_part)==1 && (get_admin($id_usr) == 1 || get_match_id_usr2($id_part) == $id_usr)){
+        increment_win(get_match_winner($id));
+        increment_lose(get_match_loser($id));
         $db=  connect_urbangames();
         $db->query("LOCK TABLES matches{write}");
         $query=$db->prepare("UPDATE matches SET state = 2 WHERE id = ?");
@@ -366,6 +505,7 @@ function confirm_score_final_phase($id_part, $id_usr){
 
 function end_tournament($id_tor, $id_part, $credits){
     increment_tournament_state($id_tor);
+    increment_trophy(get_match_winner($id_part));
     if(get_tournament_credits($id_tor) == 0){
         set_user_credits(get_match_winner($id_part), $credits);
     }
@@ -397,7 +537,7 @@ function insert_score_fp($id, $g1, $g2, $id_usr){
 }
 
 //Function for send Email
-function send_mail($id){
+function send_mail($id) {
         error_reporting(E_ALL);
 
 // Genera un boundary
@@ -448,3 +588,66 @@ if (mail($to, $subject, $msg, $headers, "-f$sender")) {
     echo "<br><br>Recapito e-Mail fallito!";
 }
 }
+
+function check_subscripted($user, $tor){
+    $db=  connect_urbangames();
+    $db->query("LOCK TABLES iscrizione{read}");
+    $query=$db->prepare("SELECT * FROM iscrizione WHERE id_usr = ? AND id_tor = ?");
+    $query->execute(array($user,$tor));
+    if($query->rowCount() > 0){
+        $db->query("UNLOCK TABLES");
+        return 1;
+    }
+    else{
+        $db->query("UNLOCK TABLES");
+        return 0;
+    }
+}
+
+function remove_subscription($user,$tor){
+    if(get_tournament_state($tor)==1){
+        echo ("Torneo ormai in corso!");
+        return;
+    }
+        $db= connect_urbangames();
+        $db->query("LOCK TABLES iscrizione{write}");
+        $query=$db->prepare("DELETE FROM iscrizione WHERE id_usr = ? AND id_tor = ?");
+        $query->execute(array($user, $tor));
+        $db->query("UNLOCK TABLES");
+        $db_users= connect_users();
+        $db_users->query("LOCK TABLES users{write}");
+        $query=$db_users->prepare("UPDATE users SET balance = ? WHERE id = ?");
+        $query->execute(array(get_balance($id_usr)+get_tournament_credits($id_tor), $id_usr));
+        $db_users->query("UNLOCK TABLES");
+        echo("Iscrizione annullata");
+}
+
+function generate_code($tor){
+    if(get_ad_gt(get_id($_SESSION['username']))){
+    $code = $_SESSION['username'].'_'.time();
+    $db = connect_users();
+    $db->query("LOCK TABLES codes {write}");
+    $query=$db->prepare("INSERT INTO codes (id_ tor, id_admin, codice) VALUES (?,?,?)");
+    $query->execute(array($tor,get_id($_SESSION['username']), $code));
+    $db->query("UNLOCK TABLES");
+    }
+
+}
+
+function check_code($tor,$code){
+    $db=connect_users();
+    $db->query("LOCK TABLES codes{write}");
+    $query=$db->prepare("SELECT * FROM codes WHERE id_tor = ? AND codice = ?");
+    $query->execute(array($tor,$code));
+    if ($query->rowCount()== 0){
+        echo 'codice non valido!';
+        $db->query("UNLOCK TABLES");
+        return 0;
+    }
+    else{
+      $db->query("UNLOCK TABLES");
+      return 1;
+    }
+    
+}
+

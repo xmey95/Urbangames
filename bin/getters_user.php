@@ -33,6 +33,17 @@ function get_telegram($id){
     return $riga['telegram'];
 }
 
+function get_ad_gt($id){
+    $db_users = connect_users();
+    $db_users->query("LOCK TABLES users{read}");
+    $id=(int)$id;
+    $query=$db_users->prepare("SELECT ad_gt FROM users WHERE id = ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db_users->query("UNLOCK TABLES");
+    return $riga['ad_gt'];
+}
+
 function get_mail($id){
     $db_users = connect_users();
     $db_users->query("LOCK TABLES users{read}");
@@ -89,6 +100,61 @@ function get_balance($id){
     $riga=$query->fetch();
     $db_users->query("UNLOCK TABLES");
     return $riga['balance'];
+}
+
+function get_win($id){
+    $db_users = connect_users();
+    $db_users->query("LOCK TABLES users{read}");
+    $id=(int)$id;
+    $query=$db_users->prepare("SELECT win FROM users WHERE id = ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db_users->query("UNLOCK TABLES");
+    return $riga['win'];
+}
+
+function get_lose($id){
+    $db_users = connect_users();
+    $db_users->query("LOCK TABLES users{read}");
+    $id=(int)$id;
+    $query=$db_users->prepare("SELECT lose FROM users WHERE id = ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db_users->query("UNLOCK TABLES");
+    return $riga['lose'];
+}
+
+function get_tie($id){
+    $db_users = connect_users();
+    $db_users->query("LOCK TABLES users{read}");
+    $id=(int)$id;
+    $query=$db_users->prepare("SELECT tie FROM users WHERE id = ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db_users->query("UNLOCK TABLES");
+    return $riga['tie'];
+}
+
+function get_trophy($id){
+    $db_users = connect_users();
+    $db_users->query("LOCK TABLES users{read}");
+    $id=(int)$id;
+    $query=$db_users->prepare("SELECT trophy FROM users WHERE id = ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db_users->query("UNLOCK TABLES");
+    return $riga['trophy'];
+}
+
+function get_request_user($id){
+    $db_users = connect_users();
+    $db_users->query("LOCK TABLES gt_request{read}");
+    $id=(int)$id;
+    $query=$db_users->prepare("SELECT id_usr FROM gt_request WHERE id = ?");
+    $query->execute(array($id));
+    $riga=$query->fetch();
+    $db_users->query("UNLOCK TABLES");
+    return $riga['id_usr'];
 }
 ?>
 

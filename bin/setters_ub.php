@@ -35,9 +35,4 @@ function set_match_id_usr2($id, $id_part){
     $query->execute(array($id, $id_part));
     $db->query("UNLOCK TABLES");
 }
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
